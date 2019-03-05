@@ -3,6 +3,8 @@ package com.engineeringidea.identification.identification
 import android.annotation.SuppressLint
 import android.app.Activity
 import android.content.Intent
+import com.google.android.gms.common.SignInButton
+import com.twitter.sdk.android.core.identity.TwitterLoginButton
 
 object Identification {
 
@@ -11,37 +13,27 @@ object Identification {
 
     /**
      * Добавляем инициализацию в onCreate для дальнейшего использования.
+     * Перед setContentView(R.layout.activity_main)
      */
     fun init(activity: Activity) {
         identificationApp = IdentificationApp(activity)
-    }
-
-    fun initUI() {
-        identificationApp.initUI()
-    }
-
-    /**
-     * В onStart проверяем пользователь уже был авторизован в приложении или нет.
-     */
-    fun checkCurrentUser() {
         identificationApp.checkCurrentUser()
     }
 
     /**
-     * Используем эту функцию в событие для кнопки.
-     * Лучше всего использовать связку кнопка от гугл + событие onClick.
-     * Добавляем данную кнопку в разметку.
-     * @see com.google.android.gms.common.SignInButton
+     * Инициализируем кнопку для входа через Google
+     * Вызвать когда UI будет установлен.
      */
-    fun signInGoogle() {
-        identificationApp.signInGoogle()
+    fun addSignGoogleButton(button: SignInButton) {
+        identificationApp.addSignGoogleButton(button)
     }
 
     /**
-     * Скоро
+     * Инициализируем кнопку для входа через Twitter
+     * Вызвать когда UI будет установлен.
      */
-    fun signInTwitter() {
-
+    fun addSignTwitterButton(twitterButton: TwitterLoginButton) {
+        identificationApp.addSignTwitterButton(twitterButton)
     }
 
     /**

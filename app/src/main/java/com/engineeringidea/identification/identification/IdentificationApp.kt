@@ -2,26 +2,29 @@ package com.engineeringidea.identification.identification
 
 import android.app.Activity
 import android.content.Intent
-import com.engineeringidea.identification.identification.IdentificationConst.API_ERROR
+import android.util.Log
+import com.engineeringidea.identification.BuildConfig
 import com.engineeringidea.identification.identification.IdentificationConst.ID_TOKEN_NULL
+import com.engineeringidea.identification.identification.IdentificationConst.LOG_ENABLED
 import com.engineeringidea.identification.identification.IdentificationConst.OTHER_ERROR
+import com.google.android.gms.common.SignInButton
 import com.google.firebase.auth.FirebaseAuth
 import com.google.firebase.auth.FirebaseUser
+import com.twitter.sdk.android.core.identity.TwitterLoginButton
 
 class IdentificationApp(activity: Activity) {
 
     private val auth = FirebaseAuth.getInstance()
-    private val google: IdentificationGoogle
-    private val twitter: IdentificationTwitter
+    private var google: IdentificationGoogle
+    private var twitter: IdentificationTwitter
     private val callback: IdentificationCallback
 
     init {
-        google = IdentificationGoogle(activity, auth)
+        google = IdentificationGoogle(activity, auth, this)
         twitter = IdentificationTwitter(activity, auth, this)
 
         if (activity is IdentificationCallback) {
             callback = activity
-            callback.onIdentificationStart()
         } else {
             throw ClassCastException(
                 "Not found IdentificationCallback. " +
@@ -30,56 +33,77 @@ class IdentificationApp(activity: Activity) {
         }
     }
 
-    fun initUI() {
-        twitter.initUI()
+    fun addSignGoogleButton(button: SignInButton) {
+        google.initUI(button)
     }
 
-    fun signInGoogle() {
-        google.signIn()
+    fun addSignTwitterButton(twitterButton: TwitterLoginButton) {
+        twitter.initUI(twitterButton)
     }
 
     fun checkCurrentUser() {
         val currentUser = auth.currentUser
-        updateUI(currentUser)
+        onUpdateUI(currentUser)
     }
 
-    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        when (requestCode) {
-            IdentificationConst.GOOGLE_RC_SIGN_IN -> google.onActivityResult(data,
-                onUpdateUI = { currentUser ->
-                    updateUI(currentUser)
-                },
-                onError = { apiError ->
-                    callback.onIdentificationError(API_ERROR, apiError)
-                })
-            IdentificationConst.TWITTER_RC_SIGN_IN -> {
-                twitter.onActivityResult(requestCode, resultCode, data)
-            }
-        }
-    }
-
-    fun updateUI(currentUser: FirebaseUser?) {
+    fun onUpdateUI(currentUser: FirebaseUser?) {
         if (currentUser == null) {
             callback.onIdentificationUserNotFound()
+            logInfo("user not found")
         } else {
             currentUser.getIdToken(true)
                 .addOnCompleteListener { task ->
                     if (task.isSuccessful) {
                         val idToken = task.result!!.token
                         if (idToken == null) {
-                            callback.onIdentificationError(ID_TOKEN_NULL, NullPointerException("id token is null"))
+                            onError(ID_TOKEN_NULL, NullPointerException("id token is null"))
+                            logError("token is null")
                         } else {
-                            callback.onIdentificationSuccess(currentUser, idToken)
+                            callback.onIdentificationUserFound(currentUser, idToken)
+                            logInfo("token received successfully, token: $idToken")
                         }
                     } else {
                         val exception = task.exception
                         if (exception == null) {
-                            callback.onIdentificationError(OTHER_ERROR, Exception("Unknown error"))
+                            onError(OTHER_ERROR, Exception("Unknown error"))
+                            logError("Unknown error")
                         } else {
-                            callback.onIdentificationError(OTHER_ERROR, exception)
+                            onError(OTHER_ERROR, exception)
+                            logError("Unknown error", exception)
                         }
                     }
                 }
+        }
+    }
+
+    fun onError(errorCode: Int, error: Exception) {
+        callback.onIdentificationError(errorCode, error)
+    }
+
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        when (requestCode) {
+            IdentificationConst.GOOGLE_RC_SIGN_IN -> google.onActivityResult(data)
+            IdentificationConst.TWITTER_RC_SIGN_IN -> twitter.onActivityResult(requestCode, resultCode, data)
+        }
+    }
+
+    fun logInfo(msg: String) {
+        if (BuildConfig.DEBUG && LOG_ENABLED) {
+            Log.i(IdentificationConst.TAG, msg)
+        }
+    }
+
+    fun logError(msg: String) {
+        logError(msg, null)
+    }
+
+    fun logError(msg: String, e: Exception?) {
+        if (BuildConfig.DEBUG && LOG_ENABLED) {
+            if (e == null) {
+                Log.e(IdentificationConst.TAG, msg)
+            } else {
+                Log.e(IdentificationConst.TAG, msg, e)
+            }
         }
     }
 }
