@@ -17,7 +17,7 @@ class IdentificationApp(activity: Activity) {
 
     init {
         google = IdentificationGoogle(activity, auth)
-        twitter = IdentificationTwitter(auth)
+        twitter = IdentificationTwitter(activity, auth, this)
 
         if (activity is IdentificationCallback) {
             callback = activity
@@ -30,6 +30,10 @@ class IdentificationApp(activity: Activity) {
         }
     }
 
+    fun initUI() {
+        twitter.initUI()
+    }
+
     fun signInGoogle() {
         google.signIn()
     }
@@ -39,9 +43,9 @@ class IdentificationApp(activity: Activity) {
         updateUI(currentUser)
     }
 
-    fun onIdentificationResult(requestCode: Int, data: Intent?) {
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         when (requestCode) {
-            IdentificationConst.GOOGLE_RC_SIGN_IN -> google.onResult(data,
+            IdentificationConst.GOOGLE_RC_SIGN_IN -> google.onActivityResult(data,
                 onUpdateUI = { currentUser ->
                     updateUI(currentUser)
                 },
@@ -49,12 +53,12 @@ class IdentificationApp(activity: Activity) {
                     callback.onIdentificationError(API_ERROR, apiError)
                 })
             IdentificationConst.TWITTER_RC_SIGN_IN -> {
-
+                twitter.onActivityResult(requestCode, resultCode, data)
             }
         }
     }
 
-    private fun updateUI(currentUser: FirebaseUser?) {
+    fun updateUI(currentUser: FirebaseUser?) {
         if (currentUser == null) {
             callback.onIdentificationUserNotFound()
         } else {

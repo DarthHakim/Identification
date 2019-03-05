@@ -32,7 +32,7 @@ class IdentificationGoogle(
         activity.startActivityForResult(signInIntent, IdentificationConst.GOOGLE_RC_SIGN_IN)
     }
 
-    fun onResult(
+    fun onActivityResult(
         data: Intent?,
         onUpdateUI: (user: FirebaseUser?) -> Unit,
         onError: (error: ApiException) -> Unit

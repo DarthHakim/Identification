@@ -2,22 +2,32 @@ package com.engineeringidea.identification
 
 import android.content.Intent
 import android.os.Bundle
+import android.util.Log
 import android.view.View
 import androidx.appcompat.app.AppCompatActivity
 import com.engineeringidea.identification.identification.Identification
 import com.engineeringidea.identification.identification.IdentificationCallback
 import com.google.android.gms.common.SignInButton
 import com.google.firebase.auth.FirebaseUser
+import com.twitter.sdk.android.core.Callback
+import com.twitter.sdk.android.core.Result
+import com.twitter.sdk.android.core.TwitterException
+import com.twitter.sdk.android.core.TwitterSession
+import com.twitter.sdk.android.core.identity.TwitterLoginButton
 
 class MainActivity : AppCompatActivity(), IdentificationCallback, View.OnClickListener {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_main)
         //Инициализируем авторизацию
         Identification.init(this)
-        //Устанавливаем событие на кнопку
+        setContentView(R.layout.activity_main)
+        //Инициализируем UI
+        Identification.initUI()
+        //Устанавливаем события на кнопки
         findViewById<SignInButton>(R.id.sign_in_google).setOnClickListener(this)
+//        findViewById<TwitterLoginButton>(R.id.sign_in_twitter).setOnClickListener(this)
+
     }
 
     override fun onStart() {
@@ -47,7 +57,7 @@ class MainActivity : AppCompatActivity(), IdentificationCallback, View.OnClickLi
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        Identification.onIdentificationResult(requestCode, data)
+        Identification.onActivityResult(requestCode, resultCode, data)
     }
 
     /**

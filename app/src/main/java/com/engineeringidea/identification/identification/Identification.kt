@@ -16,6 +16,10 @@ object Identification {
         identificationApp = IdentificationApp(activity)
     }
 
+    fun initUI() {
+        identificationApp.initUI()
+    }
+
     /**
      * В onStart проверяем пользователь уже был авторизован в приложении или нет.
      */
@@ -45,8 +49,8 @@ object Identification {
      * Это дает нам возможность получить нужные данные.
      * Когда пользователь успешно прошел авторизацию.
      */
-    fun onIdentificationResult(requestCode: Int, data: Intent?) {
-        identificationApp.onIdentificationResult(requestCode, data)
+    fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        identificationApp.onActivityResult(requestCode, resultCode, data)
     }
 
 }
